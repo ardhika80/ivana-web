@@ -83,6 +83,18 @@ envelope.addEventListener("click", () => {
   if (envelope.classList.contains("opened")) return;
   envelope.classList.add("opened");
   envelope.setAttribute("aria-label", "Amplop terbuka");
+
+  // 🎵 Autoplay musik saat amplop di-tap
+  if (music.paused) {
+    music.play().then(() => {
+      musicToggle.setAttribute("aria-pressed", "true");
+      musicLabel.textContent = "Pause our song";
+    }).catch(err => {
+      console.log("Autoplay ditolak browser:", err);
+      musicLabel.textContent = "Tap untuk play ♫";
+    });
+  }
+
   window.setTimeout(() => {
     intro.classList.add("leaving");
     window.setTimeout(() => {
@@ -90,7 +102,6 @@ envelope.addEventListener("click", () => {
       story.hidden = false;
       window.scrollTo({ top: 0, behavior: "smooth" });
       makeHearts(10);
-      // Music is intentionally not forced on: user can start it with the music button.
     }, 500);
   }, 650);
 });
@@ -138,10 +149,36 @@ const memoryNotesContent = [
   { title: "Official notice ✷", text: "Kamu resmi dituduh mencuri perhatian, memenuhi pikiranku secara ilegal, dan menjadi orang favoritku. Hukuman: disayang terus." }
 ];
 
+let typingTimer = null;   // untuk clear kalau user close sebelum selesai
+
+function typeText(el, text, speed = 28) {
+  // Bersihkan timer sebelumnya
+  if (typingTimer) clearTimeout(typingTimer);
+
+  el.innerHTML = "";
+  const caret = document.createElement("span");
+  caret.className = "caret";
+
+  let i = 0;
+  function step() {
+    if (i <= text.length) {
+      el.textContent = text.slice(0, i);
+      el.appendChild(caret);
+      i++;
+      typingTimer = setTimeout(step, speed);
+    } else {
+      // selesai — caret tetap blink
+      el.appendChild(caret);
+    }
+  }
+  step();
+}
+
 function closeAllZoom() {
+  if (typingTimer) clearTimeout(typingTimer);
+
   $$(".memory.polaroid.zoomed").forEach(card => {
     card.classList.remove("zoomed");
-    // Hapus note panel
     const panel = card.querySelector(".polaroid-note-panel");
     if (panel) panel.classList.remove("active");
   });
@@ -159,34 +196,53 @@ $$(".memory.polaroid").forEach(card => {
     if (!isZoomed) {
       closeAllZoom();
 
-      // Simpan posisi asli (parent + next sibling) biar bisa dikembalikan
+      // Simpan posisi asli
       card._originalParent = card.parentNode;
       card._originalNext = card.nextSibling;
 
+      // Buat / ambil panel
       let panel = card.querySelector(".polaroid-note-panel");
       if (!panel) {
         panel = document.createElement("div");
         panel.className = "polaroid-note-panel";
+
         const idx = Number(card.dataset.memory);
         const note = memoryNotesContent[idx] || { title: "A note", text: "" };
+
         panel.innerHTML = `
           <p class="note-panel-title">${note.title}</p>
-          <p class="note-panel-text">${note.text}</p>
+          <p class="note-panel-text"></p>
         `;
         card.appendChild(panel);
       }
 
-      // PINDAHKAN ke body supaya tidak kena blur dari main
+      // Pindahkan polaroid ke body supaya tidak kena blur main
       document.body.appendChild(card);
+      // Pindahkan panel juga ke body supaya position:fixed bekerja di viewport
+      
 
       card.classList.add("zoomed");
       memoryGrid.classList.add("has-zoomed");
       polaroidBackdrop.classList.add("active");
       document.body.classList.add("zoomed-mode");
 
-      window.setTimeout(() => panel.classList.add("active"), 280);
+      // Aktifkan panel + mulai typing
+      window.setTimeout(() => {
+        panel.classList.add("active");
+
+        // Ambil teks dari memoryNotesContent
+        const idx = Number(card.dataset.memory);
+        const note = memoryNotesContent[idx] || { title: "A note", text: "" };
+        const textEl = panel.querySelector(".note-panel-text");
+
+        // Mulai typing setelah panel muncul
+        window.setTimeout(() => typeText(textEl, note.text, 28), 350);
+      }, 280);
 
     } else {
+      // Zoom out
+      if (typingTimer) clearTimeout(typingTimer);
+
       const panel = card.querySelector(".polaroid-note-panel");
       if (panel) panel.classList.remove("active");
 
@@ -202,12 +258,21 @@ $$(".memory.polaroid").forEach(card => {
           }
         }
 
+        // Kembalikan panel ke dalam card
+        
+
         memoryGrid.classList.remove("has-zoomed");
         polaroidBackdrop.classList.remove("active");
         document.body.classList.remove("zoomed-mode");
       }, 200);
     }
   });
+});
+
+// Backdrop & ESC
+polaroidBackdrop.addEventListener("click", closeAllZoom);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeAllZoom();
 });
 
 // Klik backdrop → tutup semua
