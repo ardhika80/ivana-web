@@ -147,6 +147,7 @@ function closeAllZoom() {
   });
   memoryGrid.classList.remove("has-zoomed");
   polaroidBackdrop.classList.remove("active");
+  document.body.classList.remove("zoomed-mode");
 }
 
 $$(".memory.polaroid").forEach(card => {
@@ -156,18 +157,18 @@ $$(".memory.polaroid").forEach(card => {
     const isZoomed = card.classList.contains("zoomed");
 
     if (!isZoomed) {
-      // Tutup semua yang sedang zoom dulu (biar cuma 1)
       closeAllZoom();
 
-      // Bikin note panel kalau belum ada
+      // Simpan posisi asli (parent + next sibling) biar bisa dikembalikan
+      card._originalParent = card.parentNode;
+      card._originalNext = card.nextSibling;
+
       let panel = card.querySelector(".polaroid-note-panel");
       if (!panel) {
         panel = document.createElement("div");
         panel.className = "polaroid-note-panel";
-
         const idx = Number(card.dataset.memory);
         const note = memoryNotesContent[idx] || { title: "A note", text: "" };
-
         panel.innerHTML = `
           <p class="note-panel-title">${note.title}</p>
           <p class="note-panel-text">${note.text}</p>
@@ -175,23 +176,35 @@ $$(".memory.polaroid").forEach(card => {
         card.appendChild(panel);
       }
 
-      // Trigger zoom
+      // PINDAHKAN ke body supaya tidak kena blur dari main
+      document.body.appendChild(card);
+
       card.classList.add("zoomed");
       memoryGrid.classList.add("has-zoomed");
       polaroidBackdrop.classList.add("active");
+      document.body.classList.add("zoomed-mode");
 
-      // Kasih delay dikit biar panel slide out setelah polaroid sampai
       window.setTimeout(() => panel.classList.add("active"), 280);
 
     } else {
-      // Zoom out — tutup panel dulu, baru polaroid balik
       const panel = card.querySelector(".polaroid-note-panel");
       if (panel) panel.classList.remove("active");
 
       window.setTimeout(() => {
         card.classList.remove("zoomed");
+
+        // Kembalikan ke parent asli
+        if (card._originalParent) {
+          if (card._originalNext && card._originalNext.parentNode === card._originalParent) {
+            card._originalParent.insertBefore(card, card._originalNext);
+          } else {
+            card._originalParent.appendChild(card);
+          }
+        }
+
         memoryGrid.classList.remove("has-zoomed");
         polaroidBackdrop.classList.remove("active");
+        document.body.classList.remove("zoomed-mode");
       }, 200);
     }
   });

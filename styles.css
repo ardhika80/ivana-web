@@ -982,13 +982,20 @@ h1 em, h2 em {
   position: fixed;
   inset: 0;
   z-index: 20;
-  background: rgba(5, 3, 15, 0.6);
+  background: rgba(5, 3, 15, 0.72);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s ease;
 }
+
+body.zoomed-mode main,
+body.zoomed-mode .topbar {
+  filter: blur(8px);
+  transition: filter 0.4s ease;
+}
+
 .polaroid-zoom-backdrop.active {
   opacity: 1;
   pointer-events: auto;
@@ -1012,26 +1019,11 @@ h1 em, h2 em {
    ========================================================= */
 
 /* 1. Foto & caption naik layer biar nggak kena backdrop-filter parent */
-.memory.polaroid img {
-  position: relative;
-  z-index: 1;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
-}
 
 .memory.polaroid .photo-caption,
 .memory.polaroid .tap-label {
   position: relative;
   z-index: 1;
-}
-
-/* 2. Saat polaroid di-zoom: MATIKAN backdrop-filter, pakai background solid */
-.memory.polaroid.zoomed {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  background: #1a1030 !important;
-  isolation: isolate;
 }
 
 /* 3. Notes panel saat aktif: MATIKAN backdrop-filter, pakai background solid */
