@@ -123,30 +123,86 @@ $$("[data-memory]").forEach(card => {
 });
 $("#closeMemory").addEventListener("click", () => { memoryReveal.hidden = true; });
 
+/* =========================================================
+   Polaroid Zoom + Notes Panel
+   Klik → polaroid terbang ke center, notes slide out ke kanan
+   Klik lagi → semua kembali ke posisi asal
+   ========================================================= */
 const polaroidBackdrop = $("#polaroidBackdrop");
 const memoryGrid = $(".memory-grid");
 
+const memoryNotesContent = [
+  { title: "The little things", text: "Kadang bukan momen besar yang paling aku ingat. Justru hal kecil saat kita ketawa bareng, ngobrol random, atau cuma ada di dekat satu sama lain." },
+  { title: "My favorite weirdo", text: "Kamu bisa bikin aku ketawa sekaligus geleng-geleng kepala. Jujur, itu skill langka. Tolong jangan disalahgunakan." },
+  { title: "If I could replay a day", text: "Aku bakal pilih satu hari biasa bareng kamu. Nggak harus mewah—asal ada kamu, ceritanya udah menarik." },
+  { title: "Official notice ✷", text: "Kamu resmi dituduh mencuri perhatian, memenuhi pikiranku secara ilegal, dan menjadi orang favoritku. Hukuman: disayang terus." }
+];
+
+function closeAllZoom() {
+  $$(".memory.polaroid.zoomed").forEach(card => {
+    card.classList.remove("zoomed");
+    // Hapus note panel
+    const panel = card.querySelector(".polaroid-note-panel");
+    if (panel) panel.classList.remove("active");
+  });
+  memoryGrid.classList.remove("has-zoomed");
+  polaroidBackdrop.classList.remove("active");
+}
+
 $$(".memory.polaroid").forEach(card => {
   card.addEventListener("click", (e) => {
-    // Kalau klik dari tombol di dalamnya, biarkan (misal nanti ada)
     if (e.target.closest("button") && e.target.closest("button") !== card) return;
 
     const isZoomed = card.classList.contains("zoomed");
 
     if (!isZoomed) {
-      // Zoom in kartu ini
+      // Tutup semua yang sedang zoom dulu (biar cuma 1)
+      closeAllZoom();
+
+      // Bikin note panel kalau belum ada
+      let panel = card.querySelector(".polaroid-note-panel");
+      if (!panel) {
+        panel = document.createElement("div");
+        panel.className = "polaroid-note-panel";
+
+        const idx = Number(card.dataset.memory);
+        const note = memoryNotesContent[idx] || { title: "A note", text: "" };
+
+        panel.innerHTML = `
+          <p class="note-panel-title">${note.title}</p>
+          <p class="note-panel-text">${note.text}</p>
+        `;
+        card.appendChild(panel);
+      }
+
+      // Trigger zoom
       card.classList.add("zoomed");
       memoryGrid.classList.add("has-zoomed");
       polaroidBackdrop.classList.add("active");
-      card.setAttribute("aria-label", "Klik untuk zoom out");
+
+      // Kasih delay dikit biar panel slide out setelah polaroid sampai
+      window.setTimeout(() => panel.classList.add("active"), 280);
+
     } else {
-      // Zoom out
-      card.classList.remove("zoomed");
-      memoryGrid.classList.remove("has-zoomed");
-      polaroidBackdrop.classList.remove("active");
-      card.setAttribute("aria-label", "Klik untuk zoom in");
+      // Zoom out — tutup panel dulu, baru polaroid balik
+      const panel = card.querySelector(".polaroid-note-panel");
+      if (panel) panel.classList.remove("active");
+
+      window.setTimeout(() => {
+        card.classList.remove("zoomed");
+        memoryGrid.classList.remove("has-zoomed");
+        polaroidBackdrop.classList.remove("active");
+      }, 200);
     }
   });
+});
+
+// Klik backdrop → tutup semua
+polaroidBackdrop.addEventListener("click", closeAllZoom);
+
+// Tekan ESC → tutup semua
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeAllZoom();
 });
 
 // Klik backdrop → zoom out semua polaroid

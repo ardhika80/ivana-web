@@ -297,16 +297,35 @@ h1 em, h2 em {
 
 /* ===== Polaroid / Kartu Glass ===== */
 .polaroid {
-  background: var(--glass-strong);
+  background: transparent;
   padding: 10px 10px 0;
   border: 1px solid var(--line);
   border-radius: 4px;
   box-shadow: var(--shadow), 0 0 30px rgba(126, 200, 255, 0.08);
   position: relative;
+  color: var(--ink);
+  isolation: isolate;    /* bikin stacking context sendiri */
+}
+
+/* Efek kaca dipindah ke pseudo-element supaya isi polaroid TIDAK ikut blur */
+.polaroid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-strong);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  color: var(--ink);
+  z-index: 0;
+  pointer-events: none;
 }
+
+/* Foto & teks naik di atas pseudo-element kaca */
+.polaroid > * {
+  position: relative;
+  z-index: 1;
+}
+
 .polaroid img {
   display: block;
   width: 100%;
@@ -393,15 +412,33 @@ h1 em, h2 em {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(160deg, rgba(185, 140, 255, 0.15), rgba(126, 200, 255, 0.08));
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: transparent;
   border: 1px solid var(--line);
   border-radius: 4px;
   box-shadow: var(--shadow);
   padding: 18px;
   color: var(--ink);
+  position: relative;
+  isolation: isolate;
 }
+
+.note-memory::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(160deg, rgba(185, 140, 255, 0.15), rgba(126, 200, 255, 0.08));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.note-memory > * {
+  position: relative;
+  z-index: 1;
+}
+
 .note-star {
   color: var(--pink);
   font-size: 1.6rem;
@@ -835,39 +872,119 @@ h1 em, h2 em {
 }
 
 /* =========================================================
-   Polaroid Zoom Interaction
+   Polaroid Zoom Interaction — fly to center
    ========================================================= */
-.polaroid {
-  transition:
-    transform 0.5s cubic-bezier(0.34, 1.4, 0.5, 1),
-    box-shadow 0.4s ease;
-  transform-origin: center center;
-  will-change: transform;
+
+/* Posisi asal disimpan via JS, jadi tidak pakai transform origin */
+.memory.polaroid {
   cursor: zoom-in;
+  transition:
+    transform 0.55s cubic-bezier(0.34, 1.2, 0.4, 1),
+    opacity 0.4s ease,
+    box-shadow 0.4s ease;
+  will-change: transform;
 }
 
-.polaroid.zoomed {
-  transform: scale(1.35) rotate(0deg) !important;
+/* Saat zoomed — pakai position fixed biar benar-benar di center */
+.memory.polaroid.zoomed {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  margin: 0 !important;
+  width: min(86vw, 420px) !important;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
   z-index: 25;
-  box-shadow:
-    0 25px 70px rgba(126, 200, 255, 0.4),
-    0 0 60px rgba(185, 140, 255, 0.35);
   cursor: zoom-out;
+  box-shadow:
+    0 25px 80px rgba(126, 200, 255, 0.4),
+    0 0 70px rgba(185, 140, 255, 0.35);
+  transition:
+    top 0.55s cubic-bezier(0.34, 1.2, 0.4, 1),
+    left 0.55s cubic-bezier(0.34, 1.2, 0.4, 1),
+    width 0.55s cubic-bezier(0.34, 1.2, 0.4, 1),
+    transform 0.55s cubic-bezier(0.34, 1.2, 0.4, 1),
+    box-shadow 0.4s ease;
 }
 
+/* Foto di dalam polaroid juga ikut scale pas zoom */
+.memory.polaroid.zoomed img {
+  aspect-ratio: 4 / 4.5;
+}
+
+/* Caption & tap-label ikut terbawa — mereka sudah di dalam .polaroid */
+.memory.polaroid.zoomed .photo-caption,
+.memory.polaroid.zoomed .tap-label {
+  transition: transform 0.55s cubic-bezier(0.34, 1.2, 0.4, 1),
+              opacity 0.3s ease;
+}
+
+/* ===== Notes slide out ke kanan ===== */
+
+/* Container notes yang akan slide out dari samping kanan polaroid */
+.polaroid-note-panel {
+  position: absolute;
+  top: 50%;
+  left: 100%;               /* mulai dari kanan polaroid */
+  transform: translateY(-50%) translateX(10px) scale(0.9);
+  width: 260px;
+  padding: 18px 20px;
+  background: linear-gradient(160deg, rgba(185, 140, 255, 0.22), rgba(126, 200, 255, 0.12));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(185, 140, 255, 0.25);
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.6s cubic-bezier(0.34, 1.3, 0.5, 1) 0.15s,
+    opacity 0.4s ease 0.15s;
+  z-index: 26;
+  text-align: left;
+}
+
+/* Saat aktif, note panel muncul & slide ke kanan */
+.polaroid-note-panel.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(28px) scale(1);
+}
+
+/* Isi note panel */
+.polaroid-note-panel .note-panel-title {
+  font-family: "Caveat", cursive;
+  font-size: 1.35rem;
+  color: var(--rose);
+  margin: 0 0 8px;
+  text-shadow: 0 0 15px rgba(185, 140, 255, 0.6);
+}
+
+.polaroid-note-panel .note-panel-text {
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Kartu lain redup saat ada yang di-zoom */
 .memory-grid.has-zoomed .memory:not(.zoomed) {
-  opacity: 0.35;
-  filter: blur(2px);
+  opacity: 0.25;
+  filter: blur(3px);
   transition: opacity 0.4s ease, filter 0.4s ease;
 }
 
+/* Backdrop gelap di belakang */
 .polaroid-zoom-backdrop {
   position: fixed;
   inset: 0;
   z-index: 20;
-  background: rgba(5, 3, 15, 0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(5, 3, 15, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s ease;
@@ -877,10 +994,76 @@ h1 em, h2 em {
   pointer-events: auto;
 }
 
-@media (hover: hover) {
-  .polaroid:hover {
-    box-shadow:
-      0 19px 50px rgba(126, 200, 255, 0.35),
-      0 0 40px rgba(185, 140, 255, 0.25);
+/* Saat layar sempit, notes muncul di bawah polaroid, bukan samping */
+@media (max-width: 720px) {
+  .polaroid-note-panel {
+    top: auto;
+    bottom: -10px;
+    left: 50%;
+    width: min(280px, 88%);
+    transform: translate(-50%, 20px) scale(0.9);
   }
+  .polaroid-note-panel.active {
+    transform: translate(-50%, 32px) scale(1);
+  }
+
+  /* =========================================================
+   FIX BLUR — Polaroid & Notes tajam, backdrop tetap blur
+   ========================================================= */
+
+/* 1. Foto & caption naik layer biar nggak kena backdrop-filter parent */
+.memory.polaroid img {
+  position: relative;
+  z-index: 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.memory.polaroid .photo-caption,
+.memory.polaroid .tap-label {
+  position: relative;
+  z-index: 1;
+}
+
+/* 2. Saat polaroid di-zoom: MATIKAN backdrop-filter, pakai background solid */
+.memory.polaroid.zoomed {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: #1a1030 !important;
+  isolation: isolate;
+}
+
+/* 3. Notes panel saat aktif: MATIKAN backdrop-filter, pakai background solid */
+.polaroid-note-panel,
+.polaroid-note-panel.active {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.polaroid-note-panel {
+  background: linear-gradient(
+    160deg,
+    rgba(45, 25, 75, 0.98),
+    rgba(25, 15, 50, 0.98)
+  ) !important;
+}
+
+.polaroid-note-panel.active {
+  background: linear-gradient(
+    160deg,
+    rgba(45, 25, 75, 0.98),
+    rgba(25, 15, 50, 0.98)
+  ) !important;
+}
+
+/* 4. Backdrop TETAP blur — biarkan seperti semula */
+/* (tidak ada yang perlu diubah — backdrop-filter sudah ada di .polaroid-zoom-backdrop) */
+
+/* 5. Kartu lain yang di belakang jangan "bocor" blur ke atas */
+.memory-grid.has-zoomed .memory:not(.zoomed) {
+  opacity: 0.25;
+  filter: blur(2px);
+  isolation: isolate;
+}
 }
