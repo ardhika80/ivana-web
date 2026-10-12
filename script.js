@@ -316,9 +316,9 @@ secretCards.forEach(card => {
 });
 
 const quizReplies = {
-  me: "Jawaban penuh percaya diri! Sayang sekali, juri (aku) menyatakan kamu tetap menggemaskan. 💗",
-  you: "Jawaban benar. Kamu menang hadiah berupa... kasih sayang tanpa batas dan gangguan kecil setiap hari. 😌",
-  both: "Diplomatis dan romantis. Nilai sempurna! Duo gemas ini memang susah dikalahkan. 🏆"
+  me: "Jawaban penuh NPD ya! Sayang sekali, juri (aku) menyatakan kamu emang tetap menggemaskan. 💗",
+  you: "Kelas king jawaban benar. Kamu menang hadiah berupa... kasih sayang tanpa batas dan gangguan kecil setiap hari. 😌",
+  both: "Egiluy diplomatis dan romantis. Nilai sempurna! Duo gemas ini (km lebih gemas) memang susah dikalahkan. 🏆"
 };
 $$(".quiz-option").forEach(button => {
   button.addEventListener("click", () => {
@@ -384,3 +384,103 @@ window.addEventListener("scroll", () => {
   const progress = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0;
   progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
 }, { passive: true });
+
+/* =========================================================
+   Auto-scroll — 5 detik per section
+   Berhenti otomatis kalau user scroll manual
+   ========================================================= */
+(function autoScroll() {
+  const SECTIONS = [
+    ".hero-section",
+    "#memories",
+    "#secrets",
+    "#quiz",
+    "#letter",
+    "#finale"
+  ];
+  const DELAY = 4000;      // 4 detik per section
+
+  let currentIndex = -1;
+  let timerId = null;
+  let userInterrupted = false;
+  let started = false;
+
+  function scrollToSection(index) {
+    if (index >= SECTIONS.length) {
+      stopAutoScroll();
+      return;
+    }
+    const el = document.querySelector(SECTIONS[index]);
+    if (!el) {
+      scrollToSection(index + 1);
+      return;
+    }
+
+    currentIndex = index;
+
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // Jadwalkan section berikutnya
+    timerId = window.setTimeout(() => {
+      scrollToSection(index + 1);
+    }, DELAY);
+  }
+
+  function stopAutoScroll() {
+    if (timerId) {
+      clearTimeout(timerId);
+      timerId = null;
+    }
+  }
+
+  function startAutoScroll() {
+    if (started) return;
+    started = true;
+
+    // Mulai dari section pertama (hero)
+    timerId = window.setTimeout(() => {
+      scrollToSection(0);
+    }, DELAY);
+  }
+
+  // Deteksi scroll manual user → stop auto-scroll
+  let userScrollTimeout = null;
+  window.addEventListener("wheel", () => {
+    if (!started) return;
+    userInterrupted = true;
+    stopAutoScroll();
+  }, { passive: true });
+
+  window.addEventListener("touchmove", () => {
+    if (!started) return;
+    userInterrupted = true;
+    stopAutoScroll();
+  }, { passive: true });
+
+  window.addEventListener("keydown", (e) => {
+    if (!started) return;
+    // Panah atas/bawah, PageUp/PageDown, Space
+    if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", " "].includes(e.key)) {
+      userInterrupted = true;
+      stopAutoScroll();
+    }
+  });
+
+  // Tunggu sampai story muncul, baru mulai auto-scroll
+  const observer = new MutationObserver(() => {
+    const story = document.getElementById("story");
+    if (story && !story.hidden) {
+      startAutoScroll();
+      observer.disconnect();
+    }
+  });
+
+  const story = document.getElementById("story");
+  if (story) {
+    observer.observe(story, { attributes: true, attributeFilter: ["hidden"] });
+    // Kalau story sudah kelihatan dari awal (misal restart)
+    if (!story.hidden) {
+      startAutoScroll();
+    }
+  }
+})();
