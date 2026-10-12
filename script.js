@@ -123,15 +123,50 @@ $$("[data-memory]").forEach(card => {
 });
 $("#closeMemory").addEventListener("click", () => { memoryReveal.hidden = true; });
 
+const polaroidBackdrop = $("#polaroidBackdrop");
+const memoryGrid = $(".memory-grid");
+
 $$(".memory.polaroid").forEach(card => {
-  card.addEventListener("dblclick", () => {
-    const image = $("img", card);
-    modalImage.src = image.src;
-    modalImage.alt = image.alt;
-    modalCaption.textContent = $(".photo-caption", card).textContent;
-    modal.hidden = false;
+  card.addEventListener("click", (e) => {
+    // Kalau klik dari tombol di dalamnya, biarkan (misal nanti ada)
+    if (e.target.closest("button") && e.target.closest("button") !== card) return;
+
+    const isZoomed = card.classList.contains("zoomed");
+
+    if (!isZoomed) {
+      // Zoom in kartu ini
+      card.classList.add("zoomed");
+      memoryGrid.classList.add("has-zoomed");
+      polaroidBackdrop.classList.add("active");
+      card.setAttribute("aria-label", "Klik untuk zoom out");
+    } else {
+      // Zoom out
+      card.classList.remove("zoomed");
+      memoryGrid.classList.remove("has-zoomed");
+      polaroidBackdrop.classList.remove("active");
+      card.setAttribute("aria-label", "Klik untuk zoom in");
+    }
   });
 });
+
+// Klik backdrop → zoom out semua polaroid
+polaroidBackdrop.addEventListener("click", () => {
+  $$(".memory.polaroid.zoomed").forEach(card => {
+    card.classList.remove("zoomed");
+  });
+  memoryGrid.classList.remove("has-zoomed");
+  polaroidBackdrop.classList.remove("active");
+});
+
+// Tekan ESC → zoom out semua
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    $$(".memory.polaroid.zoomed").forEach(card => card.classList.remove("zoomed"));
+    memoryGrid.classList.remove("has-zoomed");
+    polaroidBackdrop.classList.remove("active");
+  }
+});
+
 $("#modalClose").addEventListener("click", () => { modal.hidden = true; });
 modal.addEventListener("click", event => { if (event.target === modal) modal.hidden = true; });
 document.addEventListener("keydown", event => { if (event.key === "Escape") modal.hidden = true; });
