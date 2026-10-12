@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7eee4">
+  <meta name="description" content="A little interactive scrapbook made just for you.">
+  <title>Little Pieces of Us ♡</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="gradient-bg"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="#top">little pieces <span>♡</span></a>
+    <button class="music-toggle" id="musicToggle" type="button" aria-pressed="false" aria-label="Putar atau jeda musik">♫ <span id="musicLabel">Play our song</span></button>
+  </header>
+
+  <main id="top">
+    <section class="intro screen active" id="intro" aria-labelledby="introTitle">
+      <div class="tiny-stars" aria-hidden="true">✦　♡　✧</div>
+      <p class="eyebrow">DELIVERED WITH EXTRA LOVE</p>
+      <h1 id="introTitle">Psst... this is<br><em>just for ivana.</em></h1>
+      <p class="intro-copy">A simple massage from heaven, made from love for my favorite girl.</p>
+      <button class="envelope-button" id="openEnvelope" aria-label="Buka amplop surat">
+        <span class="envelope-shadow"></span>
+        <span class="letter-peek"><span>To my favorite person ♡</span><b>Open me</b></span>
+        <span class="envelope-back"></span>
+        <span class="envelope-flap"></span>
+        <span class="envelope-front"></span>
+        <span class="envelope-heart">♥</span>
+      </button>
+      <p class="tap-hint">tap the envelope to begin ↓</p>
+      <p class="small-note">Peringatan: mungkin menyebabkan senyum-senyum sendiri.</p>
+    </section>
+
+    <section class="screen story" id="story" hidden>
+      <div class="progress-wrap" aria-label="Progress scrapbook"><div class="progress-bar" id="progressBar"></div></div>
+      <section class="story-section hero-section">
+        <p class="eyebrow">WELCOME TO OUR LITTLE WORLD</p>
+        <h2>My favorite<br><em>human being.</em></h2>
+        <p class="body-copy">Aku bikin tempat kecil ini buat satu orang yang sukses bikin hari biasa jadi lebih seru. Iya, kamu. Jangan ge-er dulu. (Boleh sih.)</p>
+        <div class="hero-polaroid polaroid floaty">
+          <span class="tape"></span>
+          <img src="assets/photo-main.jpg" alt="Foto utama kalian" onerror="this.src='ivana1.jpeg'">
+          <p>my favorite view, always ♡</p>
+        </div>
+        <a class="next-link" href="#memories">lihat kenangan kita ↓</a>
+      </section>
+
+      <section class="story-section" id="memories">
+        <p class="eyebrow">THE MEMORY WALL</p>
+        <h2>Proof we're<br><em>kind of adorable.</em></h2>
+        <p class="body-copy">Ketuk fotonya. Ada cerita kecil yang mungkin cuma kita yang paham.</p>
+        <div class="memory-grid">
+          <button class="memory polaroid tilt-left" data-memory="0" aria-label="Buka cerita foto pertama">
+            <span class="tape"></span><img src="assets/photo-1.jpg" alt="Kenangan pertama" onerror="this.src='https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=800&q=85'">
+            <span class="photo-caption">a little moment ♡</span><span class="tap-label">tap me ✧</span>
+          </button>
+          <button class="memory polaroid tilt-right" data-memory="1" aria-label="Buka cerita foto kedua">
+            <span class="tape tape-pink"></span><img src="assets/photo-2.jpg" alt="Kenangan kedua" onerror="this.src='https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=85'">
+            <span class="photo-caption">my favorite weirdo</span><span class="tap-label">psst... ♡</span>
+          </button>
+          <button class="memory polaroid tilt-right" data-memory="2" aria-label="Buka cerita foto ketiga">
+            <span class="tape"></span><img src="assets/photo-3.jpg" alt="Kenangan ketiga" onerror="this.src='https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=800&q=85'">
+            <span class="photo-caption">would choose you again</span><span class="tap-label">tap me ✧</span>
+          </button>
+          <button class="memory note-memory tilt-left" data-memory="3" aria-label="Buka catatan lucu">
+            <span class="note-star">✷</span><span class="note-title">official notice</span>
+            <span class="note-copy">You are cute.<br>It's honestly inconvenient.</span>
+            <span class="tap-label">open note ♡</span>
+          </button>
+        </div>
+        <div class="memory-reveal" id="memoryReveal" aria-live="polite" hidden>
+          <span class="reveal-sparkle">✦</span>
+          <p class="handwritten" id="memoryTitle">A little memory</p>
+          <p id="memoryText"></p>
+          <button class="text-button" id="closeMemory">close this little note ×</button>
+        </div>
+      </section>
+
+      <section class="story-section secrets-section" id="secrets">
+        <p class="eyebrow">TOP SECRET (NOT REALLY)</p>
+        <h2>Three tiny things<br><em>you should know.</em></h2>
+        <p class="body-copy">Pilih kartu buat buka rahasianya. Semuanya tentang kamu, obviously.</p>
+        <div class="secret-grid">
+          <button class="secret-card" data-secret="0"><span class="secret-icon">♡</span><span class="secret-label">secret no. 1</span><span class="secret-prompt">tap to reveal</span><span class="secret-content">Kamu punya bakat bikin aku senyum cuma dari notifikasi. Agak curang, sih.</span></button>
+          <button class="secret-card" data-secret="1"><span class="secret-icon">✷</span><span class="secret-label">secret no. 2</span><span class="secret-prompt">tap to reveal</span><span class="secret-content">Kamu itu kombinasi favoritku: cantik, lucu, dan kadang ngeselin. Paket lengkap.</span></button>
+          <button class="secret-card" data-secret="2"><span class="secret-icon">♥</span><span class="secret-label">secret no. 3</span><span class="secret-prompt">tap to reveal</span><span class="secret-content">Di antara banyak hal yang belum pasti, aku bersyukur bisa mengenal kamu.</span></button>
+        </div>
+        <p class="unlock-hint" id="secretProgress">0 dari 3 rahasia terbuka ♡</p>
+      </section>
+
+      <section class="story-section quiz-section" id="quiz">
+        <p class="eyebrow">A VERY SERIOUS QUESTION</p>
+        <h2>Who is the cutest<br><em>person alive?</em></h2>
+        <p class="body-copy">Pilih jawaban dengan hati-hati. Ini ujian yang sangat tidak objektif.</p>
+        <div class="quiz-options" id="quizOptions">
+          <button class="quiz-option" data-answer="me">Aku dong, jelas.</button>
+          <button class="quiz-option" data-answer="you">Kamu, sayang. Jelas kamu.</button>
+          <button class="quiz-option" data-answer="both">Kita berdua. Duo gemas.</button>
+        </div>
+        <div class="quiz-result" id="quizResult" aria-live="polite" hidden></div>
+      </section>
+
+      <section class="story-section letter-section" id="letter">
+        <div class="letter-paper">
+          <span class="tape tape-center"></span>
+          <p class="eyebrow">OPEN WHEN YOU NEED A HUG</p>
+          <h2>A little letter<br><em>from me to you.</em></h2>
+          <p class="letter-line">Aku suka hal-hal kecil tentang kita.</p>
+          <p class="letter-line">Obrolan random, candaan yang kadang cuma kita yang ngerti, dan caramu bikin momen sederhana jadi punya arti.</p>
+          <p class="letter-line">Aku mungkin nggak selalu jago merangkai kata atau jadi orang paling romantis sedunia. Kadang malah lebih jago gangguin kamu. Tapi aku harap kamu tahu kalau kehadiranmu berarti buatku.</p>
+          <p class="letter-line">Makasih sudah jadi kamu. Semoga kita terus belajar memahami satu sama lain, ketawa bareng, dan bikin banyak kenangan yang suatu hari bisa kita lihat lagi sambil bilang, “Ya ampun, kita dulu begini banget.”</p>
+          <p class="handwritten signature">Love you, my favorite weirdo. ♡</p>
+        </div>
+      </section>
+
+      <section class="story-section finale-section" id="finale">
+        <div class="final-heart" aria-hidden="true">♡</div>
+        <p class="eyebrow">END OF SCRAPBOOK, NOT MY LOVE</p>
+        <h2>Still my favorite.<br><em>Every single day.</em></h2>
+        <p class="body-copy">Kalau suatu hari kamu lupa betapa berharganya dirimu, semoga halaman kecil ini bisa mengingatkanmu lagi.</p>
+        <button class="surprise-button" id="surpriseButton">one last tiny surprise ♡</button>
+        <div class="final-message" id="finalMessage" hidden>
+          <p class="handwritten">You are loved. More than this little website can ever explain. 💌</p>
+          <p>Dan iya, kamu tetap harus traktir aku. Website romantis bukan berarti bebas dari tagihan. 😌</p>
+        </div>
+        <button class="restart-button" id="restartButton">↻ mulai lagi dari awal</button>
+        <p class="footer-note">made with love & a little bit of chaos ♡</p>
+      </section>
+    </section>
+  </main>
+
+  <div class="modal" id="photoModal" role="dialog" aria-modal="true" aria-labelledby="modalCaption" hidden>
+    <button class="modal-close" id="modalClose" aria-label="Tutup foto">×</button>
+    <div class="modal-polaroid">
+      <img id="modalImage" src="" alt="">
+      <p id="modalCaption"></p>
+    </div>
+  </div>
+
+  <div class="hearts-layer" id="heartsLayer" aria-hidden="true"></div>
+  <div class="heart-burst" id="heartBurst" aria-hidden="true"></div>
+  <audio id="backgroundMusic" src="assets/our-song.mp3" loop preload="none"></audio>
+  <script src="gradient.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
